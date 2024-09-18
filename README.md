@@ -5,6 +5,50 @@
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/agora-999382051935506503) [![Subscribe on YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@kyegomez3242) [![Connect on LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/kye-g-38759a207/) [![Follow on X.com](https://img.shields.io/badge/X.com-Follow-1DA1F2?style=for-the-badge&logo=x&logoColor=white)](https://x.com/kyegomezb)
 
 
+## Install
+
+
+```bash
+$ pip3 install -U cnngpt
+```
+
+## Examples
+
+```python
+import torch
+from cnngpt.main import CNNLanguageModel
+
+# Hyperparameters
+vocab_size = 5000
+embedding_dim = 256
+num_layers = 4
+kernel_size = 3
+hidden_dim = 256
+max_seq_len = 100
+
+# Initialize model
+model = CNNLanguageModel(
+    vocab_size,
+    embedding_dim,
+    num_layers,
+    kernel_size,
+    hidden_dim,
+    max_seq_len,
+)
+
+# Dummy input (batch_size=32, sequence_length=50)
+x = torch.randint(
+    0, vocab_size, (32, 50)
+)  # Random integers as token IDs
+
+# Forward pass
+logits = model(x)  # [batch_size, seq_len, vocab_size]
+
+# Output shape
+print("Logits shape:", logits.shape)
+
+
+```
 
 ## Detailed Explanation of Each Step
 
