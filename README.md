@@ -1,67 +1,62 @@
 [![Multi-Modality](agorabanner.png)](https://discord.com/servers/agora-999382051935506503)
 
-# Python Package Template
+# CNN-Based Language Model
 
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/agora-999382051935506503) [![Subscribe on YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@kyegomez3242) [![Connect on LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/kye-g-38759a207/) [![Follow on X.com](https://img.shields.io/badge/X.com-Follow-1DA1F2?style=for-the-badge&logo=x&logoColor=white)](https://x.com/kyegomezb)
 
-A easy, reliable, fluid template for python packages complete with docs, testing suites, readme's, github workflows, linting and much much more
 
 
-## Installation
+## Detailed Explanation of Each Step
 
-You can install the package using pip
+### Initialization Parameters
 
-```bash
-pip install -e .
-```
+- **`vocab_size`**: The size of the vocabulary (number of unique tokens).
+- **`embedding_dim`**: The dimension of the embeddings.
+- **`num_layers`**: The number of convolutional layers.
+- **`kernel_size`**: The size of the convolutional kernels.
+- **`hidden_dim`**: The dimension of the hidden representations (should match `embedding_dim` for residual connections).
+- **`max_seq_len`**: The maximum sequence length the model can handle.
 
-# Usage
-```python
-print("hello world")
+### Embedding and Positional Encoding
 
-```
+- **Embeddings**: Convert token IDs to dense vectors.
+- **Positional Encoding**: Adds a learnable positional embedding to each token embedding.
 
+### Convolutional Blocks
 
+- **Causal Convolution**: Uses padding on the left to ensure that the convolution at time `t` does not depend on future time steps.
+- **Dilation**: Expands the receptive field exponentially, allowing the model to capture long-term dependencies.
+- **GLU Activation**: Introduces a gating mechanism that can control the flow of information.
+  - The output of the convolution is split into two halves along the channel dimension.
+  - One half is passed through a sigmoid function to act as a gate for the other half.
+- **Layer Normalization**: Normalizes the outputs to improve training stability.
+- **Residual Connections**: Adds the input to the output to facilitate training deeper networks.
 
-### Code Quality 🧹
+### Output Layer
 
-- `make style` to format the code
-- `make check_code_quality` to check code quality (PEP8 basically)
-- `black .`
-- `ruff . --fix`
+- **Projection**: Maps the final hidden states to the vocabulary space to produce logits for each token.
 
-### Tests 🧪
+## Handling Tensor Sizes
 
-[`pytests`](https://docs.pytest.org/en/7.1.x/) is used to run our tests.
+Throughout the network, we carefully manage tensor shapes to maintain consistency:
 
-### Publish on PyPi 🚀
+- After embedding and positional encoding: `[batch_size, seq_len, embedding_dim]`
+- Before convolution: Transposed to `[batch_size, embedding_dim, seq_len]`
+- After convolution and GLU: `[batch_size, hidden_dim, seq_len]`
+- After layer normalization and residual connection: Same shape as input to convolution for residual addition.
+- Before output layer: Transposed back to `[batch_size, seq_len, embedding_dim]`
+- Output logits: `[batch_size, seq_len, vocab_size]`
 
-**Important**: Before publishing, edit `__version__` in [src/__init__](/src/__init__.py) to match the wanted new version.
+## Important Notes
 
-```
-poetry build
-poetry publish
-```
+- **Causality**: By appropriately padding and slicing the convolution outputs, we ensure that the model does not use future information when predicting the current time step.
+- **Residual Connections**: The `embedding_dim` and `hidden_dim` must be equal to correctly add the residual connection.
+- **Layer Normalization**: Applied over the feature dimension; we transpose the tensor to `[batch_size, seq_len, hidden_dim]` before applying `LayerNorm`.
+- **GLU Activation Function**: The gating mechanism enhances the model's capacity to model complex patterns.
+- **Flexibility**: The model can handle sequences shorter than `max_seq_len`; positional encodings are sliced accordingly.
 
-### CI/CD 🤖
+## Conclusion
 
-We use [GitHub actions](https://github.com/features/actions) to automatically run tests and check code quality when a new PR is done on `main`.
+We have successfully translated the detailed algorithm into a PyTorch implementation, carefully following each step and ensuring that the code aligns with the design principles outlined earlier. This CNN-based language model leverages causal and dilated convolutions, gated activations, residual connections, and layer normalization to effectively model textual data for generation tasks.
 
-On any pull request, we will check the code quality and tests.
-
-When a new release is created, we will try to push the new code to PyPi. We use [`twine`](https://twine.readthedocs.io/en/stable/) to make our life easier. 
-
-The **correct steps** to create a new realease are the following:
-- edit `__version__` in [src/__init__](/src/__init__.py) to match the wanted new version.
-- create a new [`tag`](https://git-scm.com/docs/git-tag) with the release name, e.g. `git tag v0.0.1 && git push origin v0.0.1` or from the GitHub UI.
-- create a new release from GitHub UI
-
-The CI will run when you create the new release.
-
-# Docs
-We use MK docs. This repo comes with the zeta docs. All the docs configurations are already here along with the readthedocs configs.
-
-
-
-# License
-MIT
+By understanding each component and its role in the model, we can appreciate how this architecture captures both local and global dependencies in language, offering a powerful alternative to traditional models in natural language processing.
